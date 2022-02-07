@@ -1,59 +1,109 @@
 <!DOCTYPE html>
 
 <head>
-    <title>СЛОВКО - a WORDLE clone in Russian</title>
-    <!-- <scirpt src=".jquery-3.6.0.min.js"/> -->
-    <script>
+    <title>&Scy;&Lcy;&Ocy;&Vcy;&Kcy;&Ocy; - a WORDLE clone in Russian</title>
+    <!-- <scirpt src="./jquery-3.6.0.min.js" /> -->
+    <!-- <script>
 
-    </script>
+    </script> -->
     <link href="./board-style.css" rel="stylesheet">
 </head>
 
 <body>
     <div id="game">
-        <p id="title">СЛОВКО</p>
+        <div id="title">&Scy;&Lcy;&Ocy;&Vcy;&Kcy;&Ocy;</div>
         <table id="field">
-            <tr id="attempt1" class="attempt">
+            <tr>
                 <td id="letter11" class="empty letter">Ю</td>
-                <td id="letter12" class="empty letter"/>
-                <td id="letter13" class="empty letter"/>
-                <td id="letter14" class="empty letter"/>
-                <td id="letter15" class="empty letter"/>
+                <td id="letter12" class="empty letter" />
+                <td id="letter13" class="empty letter" />
+                <td id="letter14" class="empty letter" />
+                <td id="letter15" class="empty letter" />
             </tr>
-            <tr id="attempt2" class="attempt">
-                <td id="letter21" class="empty letter"/>
-                <td id="letter22" class="empty letter"/>
-                <td id="letter23" class="empty letter"/>
-                <td id="letter24" class="empty letter"/>
-                <td id="letter25" class="empty letter"/>
+            <tr>
+                <td id="letter21" class="empty letter" />
+                <td id="letter22" class="empty letter" />
+                <td id="letter23" class="empty letter" />
+                <td id="letter24" class="empty letter" />
+                <td id="letter25" class="empty letter" />
             </tr>
-            <tr id="attempt3" class="attempt">
-                <td id="letter31" class="empty letter"/>
-                <td id="letter32" class="empty letter"/>
-                <td id="letter33" class="empty letter"/>
-                <td id="letter34" class="empty letter"/>
-                <td id="letter35" class="empty letter"/>
+            <tr>
+                <td id="letter31" class="empty letter" />
+                <td id="letter32" class="empty letter" />
+                <td id="letter33" class="empty letter" />
+                <td id="letter34" class="empty letter" />
+                <td id="letter35" class="empty letter" />
             </tr>
-            <tr id="attempt4" class="attempt">
-                <td id="letter41" class="empty letter"/>
-                <td id="letter42" class="empty letter"/>
-                <td id="letter43" class="empty letter"/>
-                <td id="letter44" class="empty letter"/>
-                <td id="letter45" class="empty letter"/>
+            <tr>
+                <td id="letter41" class="empty letter" />
+                <td id="letter42" class="empty letter" />
+                <td id="letter43" class="empty letter" />
+                <td id="letter44" class="empty letter" />
+                <td id="letter45" class="empty letter" />
             </tr>
-            <tr id="attempt5" class="attempt">
-                <td id="letter51" class="empty letter"/>
-                <td id="letter52" class="empty letter"/>
-                <td id="letter53" class="empty letter"/>
-                <td id="letter54" class="empty letter"/>
-                <td id="letter55" class="empty letter"/>
+            <tr>
+                <td id="letter51" class="empty letter" />
+                <td id="letter52" class="empty letter" />
+                <td id="letter53" class="empty letter" />
+                <td id="letter54" class="empty letter" />
+                <td id="letter55" class="empty letter" />
             </tr>
-            <tr id="attempt6" class="attempt">
-                <td id="letter61" class="empty letter"/>
-                <td id="letter62" class="empty letter"/>
-                <td id="letter63" class="empty letter"/>
-                <td id="letter64" class="empty letter"/>
-                <td id="letter65" class="empty letter"/>
+            <tr>
+                <td id="letter61" class="empty letter" />
+                <td id="letter62" class="empty letter" />
+                <td id="letter63" class="empty letter" />
+                <td id="letter64" class="empty letter" />
+                <td id="letter65" class="empty letter" />
+            </tr>
+        </table>
+
+        <table id="input">
+            <tr>
+                <td id="a" class="empty key">&Acy;</td>
+                <td id="b" class="position key">&Bcy;</td>
+                <td id="v" class="word key">&Vcy;</td>
+                <td id="g" class="miss key">&Gcy;</td>
+                <td id="d" class="empty key">&Dcy;</td>
+                <td id="je" class="empty key">&IEcy;</td>
+                <td id="zh" class="empty key">&ZHcy;</td>
+                <td id="z" class="empty key">&Zcy;</td>
+            </tr>
+            <tr>
+                <td id="i" class="empty key">&Icy;</td>
+                <td id="j" class="empty key">&Jcy;</td>
+                <td id="k" class="empty key">&Kcy;</td>
+                <td id="l" class="empty key">&Lcy;</td>
+                <td id="m" class="empty key">&Mcy;</td>
+                <td id="n" class="empty key">&Ncy;</td>
+                <td id="o" class="empty key">&Ocy;</td>
+                <td id="p" class="empty key">&Pcy;</td>
+            </tr>
+            <tr>
+                <td id="r" class="empty key">&Rcy;</td>
+                <td id="s" class="empty key">&Scy;</td>
+                <td id="t" class="empty key">&Tcy;</td>
+                <td id="u" class="empty key">&Ucy;</td>
+                <td id="f" class="empty key">&Fcy;</td>
+                <td id="kh" class="empty key">&KHcy;</td>
+                <td id="ts" class="empty key">&TScy;</td>
+                <td id="ch" class="empty key">&CHcy;</td>
+            </tr>
+            <tr>
+                <td id="sh" class="empty key">&SHcy;</td>
+                <td id="shch" class="empty key">&SHCHcy;</td>
+                <td id="hard" class="empty key">&HARDcy;</td>
+                <td id="y" class="empty key">&Ycy;</td>
+                <td id="soft" class="empty key">&SOFTcy;</td>
+                <td id="e" class="empty key">&Ecy;</td>
+                <td id="yu" class="empty key">&YUcy;</td>
+                <td id="ya" class="empty key">&YAcy;</td>
+            </tr>
+        </table>
+
+        <table id="control">
+            <tr>
+                <td class="empty control">&nbsp;&#x232b;&nbsp;</td>
+                <td class="empty control">&pcy;&rcy;&ocy;&vcy;&iecy;&rcy;&icy;&tcy;&softcy;</td>
             </tr>
         </table>
     </div>

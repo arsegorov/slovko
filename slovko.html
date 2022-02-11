@@ -2,11 +2,45 @@
 
 <head>
     <title>&Scy;&Lcy;&Ocy;&Vcy;&Kcy;&Ocy; - a WORDLE clone in Russian</title>
-    <!-- <scirpt src="./jquery-3.6.0.min.js" /> -->
-    <!-- <script>
 
-    </script> -->
     <link href="./board-style.css" rel="stylesheet">
+
+    <script src="./jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).on("keydown", function (e) {
+            console.debug(`Pressed ${e.code}`);
+        });
+
+        $(document).ready(function () {
+            let keys = {},
+                alphabet = [
+                    // Russian as used in HTML's &<code>cy;
+                    "a", "b", "v", "g", "d", "ie", "zh", "z",
+                    "i", "j", "k", "l", "m", "n", "o", "p",
+                    "r", "s", "t", "u", "f", "kh", "ts", "ch",
+                    "sh", "shch", "hard", "y", "soft", "e", "yu", "ya"
+                ],
+                game = $("#game");
+
+            for (i = 0; i < alphabet.length; i++) {
+                let key = $("#" + alphabet[i]),
+                    newHTML = "&" + alphabet[i].toUpperCase() + "cy;";
+
+                key.on("click", function () {
+                    $("#letter11").html(newHTML);
+                    console.debug("Clicked " + key.text());
+                });
+                keys[alphabet[i]] = key;
+            }
+            $("#delete").on("click", function () {
+                $("#letter11").text("")
+            })
+            $("#check").on("click", function () {
+                $("#letter11").text("!")
+            })
+        });
+    </script>
 </head>
 
 <body>
@@ -64,7 +98,7 @@
                 <td id="v" class="word key">&Vcy;</td>
                 <td id="g" class="miss key">&Gcy;</td>
                 <td id="d" class="empty key">&Dcy;</td>
-                <td id="je" class="empty key">&IEcy;</td>
+                <td id="ie" class="empty key">&IEcy;</td>
                 <td id="zh" class="empty key">&ZHcy;</td>
                 <td id="z" class="empty key">&Zcy;</td>
             </tr>
@@ -102,8 +136,8 @@
 
         <table id="control">
             <tr>
-                <td class="empty control">&nbsp;&#x232b;&nbsp;</td>
-                <td class="empty control">&pcy;&rcy;&ocy;&vcy;&iecy;&rcy;&icy;&tcy;&softcy;</td>
+                <td id="delete" class="empty control">&nbsp;&#x232b;&nbsp;</td>
+                <td id="check" class="empty control">&pcy;&rcy;&ocy;&vcy;&iecy;&rcy;&icy;&tcy;&softcy;</td>
             </tr>
         </table>
     </div>

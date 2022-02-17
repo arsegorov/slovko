@@ -8,37 +8,187 @@
     <script src="./jquery-3.6.0.min.js"></script>
 
     <script>
-        $(document).on("keydown", function (e) {
-            console.debug(`Pressed ${e.code}`);
+        var tableau = [[], [], [], [], [], []],
+            attempt = 0,
+            position = 0,
+            secretWord = [];
+        const WORD_LENGTH = 5, N_ATTEMPTS = 6;
+
+
+        /**
+         * @param screenKey{JQuery}
+         */
+        function type(screenKey) {
+            if (position < WORD_LENGTH) {
+                let square = $(`#letter${attempt + 1}${position + 1}`),
+                    ruLetter = screenKey.attr("ru_letter");
+
+                square.text(ruLetter);
+                square.attr("key", screenKey.attr("id"));
+                tableau[attempt].push(ruLetter);
+                position++;
+            }
+        }
+
+        function erase() {
+            if (position > 0) {
+                let square = $(`#letter${attempt + 1}${position}`);
+
+                square.text("");
+                square.attr("key", "");
+                tableau[attempt].pop();
+                position--;
+            }
+        }
+
+        /**
+         * Highlights the playing field squares and on-screen keys
+         *  to indicate the guessed letters.
+         * @param guessLetters{string[]}
+         * @param i{number}
+         */
+        function highlight(guessLetters, i) {
+            let square = $(`#letter${attempt + 1}${i + 1}`),
+                screenKey = $(`#${square.attr("key")}`),
+                scrKeyDescendats = screenKey.find("*");
+
+            square.removeClass("empty");
+            screenKey.removeClass("empty");
+            scrKeyDescendats.removeClass("empty");
+
+            if (secretWord[i] == guessLetters[i]) {
+                square.addClass("position");
+
+                if (screenKey.hasClass("word")) {
+                    screenKey.removeClass("word");
+                    scrKeyDescendats.removeClass("word");
+                }
+                screenKey.addClass("position");
+                scrKeyDescendats.addClass("position");
+            } else if (secretWord.indexOf(guessLetters[i]) >= 0) {
+                square.addClass("word");
+
+                if (!screenKey.hasClass("position")) {
+                    screenKey.addClass("word");
+                    scrKeyDescendats.addClass("word");
+                }
+            } else {
+                square.addClass("miss");
+
+                screenKey.addClass("miss");
+                scrKeyDescendats.addClass("miss");
+            }
+        }
+
+        function check() {
+            if (position == WORD_LENGTH && attempt < N_ATTEMPTS) {
+                let guessLetters = tableau[attempt],
+                    guessWord = guessLetters.join("");
+
+                if (validate(guessWord)) {
+                    for (i = 0; i < WORD_LENGTH; i++) {
+                        highlight(guessLetters, i);
+                    }
+
+                    if (guessWord === secretWord.join("")) {
+                        // todo: replace with stats screen
+                        alert("Победа!");
+                        return;
+                    }
+
+                    attempt++;
+                    position = 0;
+                }
+                else {
+                    // Todo: replace w/ visual feedback
+                    alert(`${guessWord} - некорректное слово!`);
+                }
+            }
+        }
+
+        /**
+         * Checks whether a string is a valid word.
+         * @param word{string}
+         * @returns {boolean} whether `word` is a valid word
+         */
+        function validate(word) {
+            // todo: check agains a list
+            return word.endsWith("Ц");
+        }
+
+        /* Processing keyboard input */
+        $(document).on("keydown", function (event) {
+            console.debug(`Pressed ${event.code}`);
+
+            switch (event.code) {
+                case "Enter":
+                    check();
+                    return;
+                case "Backspace":
+                    erase();
+                    return;
+            }
+
+            let enKey = "";
+            switch (event.code) {
+                case "Semicolon":
+                    enKey = ";";
+                    break;
+                case "Quote":
+                    enKey = "\\'";
+                    break;
+                case "Comma":
+                    enKey = ",";
+                    break;
+                case "Period":
+                    enKey = ".";
+                    break;
+                case "BracketLeft":
+                    enKey = "[";
+                    break;
+                case "BracketRight":
+                    enKey = "]";
+                    break;
+                default:
+                    if (event.code.startsWith("Key")) {
+                        enKey = event.code.substr(3, 1);
+                    } else {
+                        return;
+                    }
+            }
+            console.debug(`English key is ${enKey}`);
+
+            let screenKey = $(`.key > sub:contains('${enKey}')`).parent();
+            screenKey.click();
         });
 
+        /* Entry point (i.e, main) */
         $(document).ready(function () {
-            let keys = {},
-                alphabet = [
-                    // Russian as used in HTML's &<code>cy;
-                    "a", "b", "v", "g", "d", "ie", "zh", "z",
-                    "i", "j", "k", "l", "m", "n", "o", "p",
-                    "r", "s", "t", "u", "f", "kh", "ts", "ch",
-                    "sh", "shch", "hard", "y", "soft", "e", "yu", "ya"
-                ],
-                game = $("#game");
+            let alphabet = [
+                // Russian as used in HTML's &<code>cy;
+                "a", "b", "v", "g", "d", "ie", "zh", "z",
+                "i", "j", "k", "l", "m", "n", "o", "p",
+                "r", "s", "t", "u", "f", "kh", "ts", "ch",
+                "sh", "shch", "hard", "y", "soft", "e", "yu", "ya"
+            ];
 
-            for (i = 0; i < alphabet.length; i++) {
-                let key = $("#" + alphabet[i]),
-                    newHTML = "&" + alphabet[i].toUpperCase() + "cy;";
+            for (s of alphabet) {
+                let htmlEntity = `&${s.toUpperCase()}cy;`,  // HTML &<code>;
+                    text = $("<p />").html(htmlEntity).text();  // actual Russian text
 
-                key.on("click", function () {
-                    $("#letter11").html(newHTML);
-                    console.debug("Clicked " + key.text());
+                let screenKey = $(`#${s}`);
+                screenKey.attr("ru_letter", text);
+                screenKey.on("click", function () {
+                    type(screenKey);
+                    console.debug(`Clicked ${text}`);
                 });
-                keys[alphabet[i]] = key;
             }
-            $("#delete").on("click", function () {
-                $("#letter11").text("")
-            })
-            $("#check").on("click", function () {
-                $("#letter11").text("!")
-            })
+
+            $("#delete").on("click", erase);
+            $("#check").on("click", check);
+
+            // todo: randomly select from a list
+            secretWord = "КАПЕЦ".split("");
         });
     </script>
 </head>

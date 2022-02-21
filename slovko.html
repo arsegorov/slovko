@@ -35,7 +35,8 @@
         /**
          * Processing on-screen keyboard clicks.
          * 
-         * @param screenKey{JQuery} the clicked on-screen key
+         * @param screenKey{JQuery}
+         *  the clicked on-screen key
          */
         function typeLetter(screenKey) {
             if (inputPosition < N_LETTERS) {
@@ -147,6 +148,7 @@
          *  to indicate the guessed letters.
          * 
          * @param guessLetters{string[]}
+         *  an array of single-letter strings
          */
         function highlight(guessLetters) {
             let flags = guessFlags(guessLetters);
@@ -319,10 +321,12 @@
             ];
 
             for (const s of alphabet) {
-                let htmlEntity = `&${s.toUpperCase()}cy;`,      // constructing the HTML entity, "&<code>;"
-                    //  e.g, for the Cyrillic YU, the entity is "$YUcy;"
-                    text = $("<p />").html(htmlEntity).text();  // evaluating the actual text using
+                // constructing the HTML entity, "&<code>;"
+                //  e.g, for the Cyrillic YU, the entity is "$YUcy;"
+                let htmlEntity = `&${s.toUpperCase()}cy;`;
+                // evaluating the actual text using  
                 //  the browser's internal mechanisms
+                let text = $("<p />").html(htmlEntity).text();
 
                 let screenKey = $(`#${s}`);
                 screenKey.attr("ruLetter", text);
@@ -335,6 +339,7 @@
             $("#check").on("click", checkGuess);
 
             let secretWord = secretWords[Math.floor(Math.random() * secretWords.length)];
+
             secretLetters = secretWord.toUpperCase().split("");
             secretWordPositions = letterPositions(secretLetters);
         });

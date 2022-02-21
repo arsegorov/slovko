@@ -8,90 +8,208 @@
     <script src="./jquery-3.6.0.min.js"></script>
 
     <script>
-        var tableau = [[], [], [], [], [], []],
-            attempt = 0,
-            position = 0,
-            secretWord = [];
-        const WORD_LENGTH = 5, N_ATTEMPTS = 6;
+        /*
+         * Global variables and constants
+         */
+        var tableauContents = [[], [], [], [], [], []],
+            guessAttempt = 0,
+            inputPosition = 0,
+            secretLetters = [],
+            secretWordPositions = {},
+            bestKeyFlags = {};
+
+        const
+            N_LETTERS = 5,
+            N_ATTEMPTS = 6;
+
+        const
+            C_EMPTY = "empty",
+            C_POSITION = "position",
+            C_WORD = "word",
+            C_MISS = "miss";
 
 
         /**
-         * @param screenKey{JQuery}
+         * Processing on-screen keyboard clicks.
+         * 
+         * @param screenKey{JQuery} the clicked on-screen key
          */
-        function type(screenKey) {
-            if (position < WORD_LENGTH) {
-                let square = $(`#letter${attempt + 1}${position + 1}`),
-                    ruLetter = screenKey.attr("ru_letter");
+        function typeLetter(screenKey) {
+            if (inputPosition < N_LETTERS) {
+                let tableauSquare = $(`#letter${guessAttempt + 1}${inputPosition + 1}`),
+                    letter = screenKey.attr("ruLetter");
 
-                square.text(ruLetter);
-                square.attr("key", screenKey.attr("id"));
-                tableau[attempt].push(ruLetter);
-                position++;
+                tableauSquare.text(letter);
+                tableauSquare.attr("key", screenKey.attr("id"));
+                tableauContents[guessAttempt].push(letter);
+                inputPosition++;
             }
+
+            console.debug(`Clicked ${screenKey.attr("ruLetter")}`);
         }
 
-        function erase() {
-            if (position > 0) {
-                let square = $(`#letter${attempt + 1}${position}`);
+        /**
+         * Erases the last letter of the unchecked guess word.
+         */
+        function eraseLetter() {
+            if (inputPosition > 0) {
+                let square = $(`#letter${guessAttempt + 1}${inputPosition}`);
 
                 square.text("");
                 square.attr("key", "");
-                tableau[attempt].pop();
-                position--;
+                tableauContents[guessAttempt].pop();
+                inputPosition--;
             }
+        }
+
+        /**
+         * Creates an object mapping each letter of the word
+         *  to the list of all of its positions in the word.
+         * 
+         * @param word{string[]}
+         *  an array of letters
+         * 
+         * @returns {Object<string, number[]>}
+         *  an object {"<letter>": <array of the letter's positions>}
+         */
+        function letterPositions(word) {
+            let letters = new Set(word),
+                result = {};
+
+            letters.forEach(
+                (letter) => result[letter] = word.map(
+                    (l, i) => l === letter ? i : -1
+                ).filter(
+                    (n) => n != -1
+                )
+            );
+            console.debug(`Letter positions in ${word}:`);
+            console.debug(result);
+            return result;
+        }
+
+        /**
+         * Creates a list of flags indicating how the letters of the guess word
+         *  should be highlighted.
+         * 
+         * 0 - the letter is missing in the secret word
+         *     or the running count of this letter in the guess word
+         *     exceeds its total count in the secret word.
+         * 
+         * 1 - the letter exists in the secret word, but not in this position,
+         *     and the running count of this letter in the guess word
+         *     doesn't exceed its total count in the secret word.
+         * 
+         * 2 - the letter is in the same position as in the secret word.
+         * 
+         * For the running count, the letters in the exact positions are counted first.
+         * 
+         * @param guessLetters{string[]}
+         *  the array of letters of the guess word
+         * 
+         * @returns {number[]}
+         *  array of flags for the letters of the guess word
+         */
+        function guessFlags(guessLetters) {
+            let result = [0, 0, 0, 0, 0],
+                guessWordPositions = letterPositions(guessLetters);
+
+            for (const [letter, guessLetterPositions] of Object.entries(guessWordPositions)) {
+                if (letter in secretWordPositions) {
+                    let secretLetterPositions = secretWordPositions[letter],
+                        count = 0;
+
+                    for (i of guessLetterPositions) {
+                        if (secretLetterPositions.includes(i)) {
+                            result[i] = 2;
+                            count++;
+                        }
+                    }
+                    for (i of guessLetterPositions) {
+                        if (!secretLetterPositions.includes(i)
+                            && count < secretLetterPositions.length) {
+                            result[i] = 1;
+                            count++;
+                        }
+                    }
+                }
+            }
+
+            console.debug(`Guess flags for ${guessLetters}: ${result}`);
+            return result;
         }
 
         /**
          * Highlights the playing field squares and on-screen keys
          *  to indicate the guessed letters.
+         * 
          * @param guessLetters{string[]}
-         * @param i{number}
          */
-        function highlight(guessLetters, i) {
-            let square = $(`#letter${attempt + 1}${i + 1}`),
-                screenKey = $(`#${square.attr("key")}`);
+        function highlight(guessLetters) {
+            let flags = guessFlags(guessLetters);
 
-            square.removeClass("empty");
-            screenKey.removeClass("empty");
+            for (const [i, letter] of guessLetters.entries()) {
+                bestKeyFlags[letter] = bestKeyFlags[letter]
+                    // If bestKeyFlags[letter] has already been set,
+                    // update to the better of old value and flags[i]
+                    ? Math.max(bestKeyFlags[letter], flags[i])
+                    // Otherwise, set it to flags[i]
+                    : flags[i];
+            }
 
-            if (secretWord[i] == guessLetters[i]) {
-                square.addClass("position");
+            for (const [i, letter] of guessLetters.entries()) {
+                let tableauSquare = $(`#letter${guessAttempt + 1}${i + 1}`),
+                    screenKeyID = tableauSquare.attr("key"),
+                    screenKey = $(`#${screenKeyID}`);
 
-                if (screenKey.hasClass("word")) {
-                    screenKey.removeClass("word");
+                tableauSquare.removeClass(C_EMPTY);
+                screenKey.removeClass(function (i, class_name) {
+                    // Drop the second class (e.g, "key empty" => "key")
+                    return class_name.split(" ")[1];
+                });
+
+                switch (flags[i]) {
+                    case 2:
+                        tableauSquare.addClass(C_POSITION);
+                        break;
+                    case 1:
+                        tableauSquare.addClass(C_WORD);
+                        break;
+                    default:
+                        tableauSquare.addClass(C_MISS);
                 }
-                screenKey.addClass("position");
-            } else if (secretWord.indexOf(guessLetters[i]) >= 0) {
-                square.addClass("word");
-
-                if (!screenKey.hasClass("position")) {
-                    screenKey.addClass("word");
+                switch (bestKeyFlags[letter]) {
+                    case 2:
+                        screenKey.addClass(C_POSITION);
+                        break;
+                    case 1:
+                        screenKey.addClass(C_WORD);
+                        break;
+                    default:
+                        screenKey.addClass(C_MISS);
                 }
-            } else {
-                square.addClass("miss");
-
-                screenKey.addClass("miss");
             }
         }
 
-        function check() {
-            if (position == WORD_LENGTH && attempt < N_ATTEMPTS) {
-                let guessLetters = tableau[attempt],
+        /**
+         * Validates the guess and provides feedback.
+         */
+        function checkGuess() {
+            if (inputPosition == N_LETTERS && guessAttempt < N_ATTEMPTS) {
+                let guessLetters = tableauContents[guessAttempt],
                     guessWord = guessLetters.join("");
 
                 if (validate(guessWord)) {
-                    for (i = 0; i < WORD_LENGTH; i++) {
-                        highlight(guessLetters, i);
-                    }
+                    highlight(guessLetters);
 
-                    if (guessWord === secretWord.join("")) {
+                    if (guessWord === secretLetters.join("")) {
                         // todo: replace with stats screen
                         alert("Победа!");
                         return;
                     }
 
-                    attempt++;
-                    position = 0;
+                    guessAttempt++;
+                    inputPosition = 0;
                 }
                 else {
                     // Todo: replace w/ visual feedback
@@ -102,64 +220,78 @@
 
         /**
          * Checks whether a string is a valid word.
+         * 
          * @param word{string}
-         * @returns {boolean} whether `word` is a valid word
+         *  the string to check
+         * 
+         * @returns {boolean}
+         *  whether the string is a valid word
          */
         function validate(word) {
-            // todo: check agains a list
-            return word.endsWith("Ц");
+            // todo: check agains a list of acceptable words
+            return word.includes("М");
         }
 
-        /* Processing keyboard input */
-        $(document).on("keydown", function (event) {
-            console.debug(`Pressed ${event.code}`);
+        /**
+         * Returns the symbols corresponding to the pressed key.
+         * 
+         * @param event{JQueryEventObject} keyboard key-down event
+         * 
+         * @returns {string}
+         *  if the pressed key is used in the game, the symbol corresponding to the key
+         *  otherwise, an empty string
+         */
+        function keySymbol(event) {
+            console.debug(`Event code "${event.code}"`);
 
             switch (event.code) {
                 case "Enter":
-                    check();
-                    return;
                 case "Backspace":
-                    erase();
-                    return;
-            }
-
-            let enKey = "";
-            switch (event.code) {
+                    return event.code;
                 case "Semicolon":
-                    enKey = ";";
-                    break;
+                    return ";";
                 case "Quote":
-                    enKey = "\\'";
-                    break;
+                    return "\\'";
                 case "Comma":
-                    enKey = ",";
-                    break;
+                    return ",";
                 case "Period":
-                    enKey = ".";
-                    break;
+                    return ".";
                 case "BracketLeft":
-                    enKey = "[";
-                    break;
+                    return "[";
                 case "BracketRight":
-                    enKey = "]";
-                    break;
+                    return "]";
                 default:
                     if (event.code.startsWith("Key")) {
-                        enKey = event.code.substr(3, 1);
-                    } else {
-                        return;
+                        return event.code.substr(3, 1);
                     }
-            }
-            console.debug(`English key is ${enKey}`);
 
-            let screenKey = $(`.key > sub:contains('${enKey}')`).parent();
-            screenKey.click();
+                    return "";
+            }
+        }
+
+        /* Adding keyboard input listening */
+        $(document).on("keydown", function (event) {
+            let symbol = keySymbol(event);
+
+            if (symbol) {
+                console.debug(`Pressed ${symbol}`);
+                switch (symbol) {
+                    case "Enter":
+                        checkGuess(); break;
+                    case "Backspace":
+                        eraseLetter(); break;
+                    default:
+                        // Delegating to the on-screen keyboard clicks processing
+                        let screenKey = $(`.key > sub:contains('${symbol}')`).parent();
+                        screenKey.click();
+                }
+            }
         });
 
-        /* Entry point (i.e, main) */
+        /* Main entry point */
         $(document).ready(function () {
             let alphabet = [
-                // Russian as used in HTML's &<code>cy;
+                // Cyrillic letters' codes as used in HTML entities, "&<code>cy;"
                 "a", "b", "v", "g", "d", "ie", "zh", "z",
                 "i", "j", "k", "l", "m", "n", "o", "p",
                 "r", "s", "t", "u", "f", "kh", "ts", "ch",
@@ -167,22 +299,24 @@
             ];
 
             for (s of alphabet) {
-                let htmlEntity = `&${s.toUpperCase()}cy;`,  // HTML &<code>;
-                    text = $("<p />").html(htmlEntity).text();  // actual Russian text
+                let htmlEntity = `&${s.toUpperCase()}cy;`,      // constructing the HTML entity, "&<code>;"
+                                                                //  e.g, for the Cyrillic YU, the entity is "$YUcy;"
+                    text = $("<p />").html(htmlEntity).text();  // evaluating the actual text using
+                                                                //  the browser's internal mechanisms
 
                 let screenKey = $(`#${s}`);
-                screenKey.attr("ru_letter", text);
+                screenKey.attr("ruLetter", text);
                 screenKey.on("click", function () {
-                    type(screenKey);
-                    console.debug(`Clicked ${text}`);
+                    typeLetter(screenKey);
                 });
             }
 
-            $("#delete").on("click", erase);
-            $("#check").on("click", check);
+            $("#delete").on("click", eraseLetter);
+            $("#check").on("click", checkGuess);
 
             // todo: randomly select from a list
-            secretWord = "КАПЕЦ".split("");
+            secretLetters = "ТОТЕМ".split("");
+            secretWordPositions = letterPositions(secretLetters);
         });
     </script>
 </head>
@@ -192,87 +326,87 @@
         <div id="title">&Scy;&Lcy;&Ocy;&Vcy;&Kcy;&Ocy;</div>
         <table id="field">
             <tr>
-                <td id="letter11" class="empty letter" />
-                <td id="letter12" class="empty letter" />
-                <td id="letter13" class="empty letter" />
-                <td id="letter14" class="empty letter" />
-                <td id="letter15" class="empty letter" />
+                <td id="letter11" class="letter empty" />
+                <td id="letter12" class="letter empty" />
+                <td id="letter13" class="letter empty" />
+                <td id="letter14" class="letter empty" />
+                <td id="letter15" class="letter empty" />
             </tr>
             <tr>
-                <td id="letter21" class="empty letter" />
-                <td id="letter22" class="empty letter" />
-                <td id="letter23" class="empty letter" />
-                <td id="letter24" class="empty letter" />
-                <td id="letter25" class="empty letter" />
+                <td id="letter21" class="letter empty" />
+                <td id="letter22" class="letter empty" />
+                <td id="letter23" class="letter empty" />
+                <td id="letter24" class="letter empty" />
+                <td id="letter25" class="letter empty" />
             </tr>
             <tr>
-                <td id="letter31" class="empty letter" />
-                <td id="letter32" class="empty letter" />
-                <td id="letter33" class="empty letter" />
-                <td id="letter34" class="empty letter" />
-                <td id="letter35" class="empty letter" />
+                <td id="letter31" class="letter empty" />
+                <td id="letter32" class="letter empty" />
+                <td id="letter33" class="letter empty" />
+                <td id="letter34" class="letter empty" />
+                <td id="letter35" class="letter empty" />
             </tr>
             <tr>
-                <td id="letter41" class="empty letter" />
-                <td id="letter42" class="empty letter" />
-                <td id="letter43" class="empty letter" />
-                <td id="letter44" class="empty letter" />
-                <td id="letter45" class="empty letter" />
+                <td id="letter41" class="letter empty" />
+                <td id="letter42" class="letter empty" />
+                <td id="letter43" class="letter empty" />
+                <td id="letter44" class="letter empty" />
+                <td id="letter45" class="letter empty" />
             </tr>
             <tr>
-                <td id="letter51" class="empty letter" />
-                <td id="letter52" class="empty letter" />
-                <td id="letter53" class="empty letter" />
-                <td id="letter54" class="empty letter" />
-                <td id="letter55" class="empty letter" />
+                <td id="letter51" class="letter empty" />
+                <td id="letter52" class="letter empty" />
+                <td id="letter53" class="letter empty" />
+                <td id="letter54" class="letter empty" />
+                <td id="letter55" class="letter empty" />
             </tr>
             <tr>
-                <td id="letter61" class="empty letter" />
-                <td id="letter62" class="empty letter" />
-                <td id="letter63" class="empty letter" />
-                <td id="letter64" class="empty letter" />
-                <td id="letter65" class="empty letter" />
+                <td id="letter61" class="letter empty" />
+                <td id="letter62" class="letter empty" />
+                <td id="letter63" class="letter empty" />
+                <td id="letter64" class="letter empty" />
+                <td id="letter65" class="letter empty" />
             </tr>
         </table>
 
         <table id="input">
             <tr>
-                <td id="j" class="empty key">&Jcy;<sub class="empty" style="font-size: 50%;">Q</sub></td>
-                <td id="ts" class="empty key">&TScy;<sub class="empty" style="font-size: 50%;">W</sub></td>
-                <td id="u" class="empty key">&Ucy;<sub class="empty" style="font-size: 50%;">E</sub></td>
-                <td id="k" class="empty key">&Kcy;<sub class="empty" style="font-size: 50%;">R</sub></td>
-                <td id="ie" class="empty key">&IEcy;<sub class="empty" style="font-size: 50%;">T</sub></td>
-                <td id="n" class="empty key">&Ncy;<sub class="empty" style="font-size: 50%;">Y</sub></td>
-                <td id="g" class="empty key">&Gcy;<sub class="empty" style="font-size: 50%;">U</sub></td>
-                <td id="sh" class="empty key">&SHcy;<sub class="empty" style="font-size: 50%;">I</sub></td>
-                <td id="shch" class="empty key">&SHCHcy;<sub class="empty" style="font-size: 50%;">O</sub></td>
-                <td id="z" class="empty key">&Zcy;<sub class="empty" style="font-size: 50%;">P</sub></td>
-                <td id="kh" class="empty key">&KHcy;<sub class="empty" style="font-size: 50%;">[</sub></td>
-                <td id="hard" class="empty key">&HARDcy;<sub class="empty" style="font-size: 50%;">]</sub></td>
+                <td id="j" class="key empty">&Jcy;<sub style="font-size: 50%;">Q</sub></td>
+                <td id="ts" class="key empty">&TScy;<sub style="font-size: 50%;">W</sub></td>
+                <td id="u" class="key empty">&Ucy;<sub style="font-size: 50%;">E</sub></td>
+                <td id="k" class="key empty">&Kcy;<sub style="font-size: 50%;">R</sub></td>
+                <td id="ie" class="key empty">&IEcy;<sub style="font-size: 50%;">T</sub></td>
+                <td id="n" class="key empty">&Ncy;<sub style="font-size: 50%;">Y</sub></td>
+                <td id="g" class="key empty">&Gcy;<sub style="font-size: 50%;">U</sub></td>
+                <td id="sh" class="key empty">&SHcy;<sub style="font-size: 50%;">I</sub></td>
+                <td id="shch" class="key empty">&SHCHcy;<sub style="font-size: 50%;">O</sub></td>
+                <td id="z" class="key empty">&Zcy;<sub style="font-size: 50%;">P</sub></td>
+                <td id="kh" class="key empty">&KHcy;<sub style="font-size: 50%;">[</sub></td>
+                <td id="hard" class="key empty">&HARDcy;<sub style="font-size: 50%;">]</sub></td>
             </tr>
             <tr>
-                <td id="f" class="empty key">&Fcy;<sub class="empty" style="font-size: 50%;">A</sub></td>
-                <td id="y" class="empty key">&Ycy;<sub class="empty" style="font-size: 50%;">S</sub></td>
-                <td id="v" class="empty key">&Vcy;<sub class="empty" style="font-size: 50%;">D</sub></td>
-                <td id="a" class="empty key">&Acy;<sub class="empty" style="font-size: 50%;">F</sub></td>
-                <td id="p" class="empty key">&Pcy;<sub class="empty" style="font-size: 50%;">G</sub></td>
-                <td id="r" class="empty key">&Rcy;<sub class="empty" style="font-size: 50%;">H</sub></td>
-                <td id="o" class="empty key">&Ocy;<sub class="empty" style="font-size: 50%;">J</sub></td>
-                <td id="l" class="empty key">&Lcy;<sub class="empty" style="font-size: 50%;">K</sub></td>
-                <td id="d" class="empty key">&Dcy;<sub class="empty" style="font-size: 50%;">L</sub></td>
-                <td id="zh" class="empty key">&ZHcy;<sub class="empty" style="font-size: 50%;">;</sub></td>
-                <td id="e" class="empty key">&Ecy;<sub class="empty" style="font-size: 50%;">'</sub></td>
+                <td id="f" class="key empty">&Fcy;<sub style="font-size: 50%;">A</sub></td>
+                <td id="y" class="key empty">&Ycy;<sub style="font-size: 50%;">S</sub></td>
+                <td id="v" class="key empty">&Vcy;<sub style="font-size: 50%;">D</sub></td>
+                <td id="a" class="key empty">&Acy;<sub style="font-size: 50%;">F</sub></td>
+                <td id="p" class="key empty">&Pcy;<sub style="font-size: 50%;">G</sub></td>
+                <td id="r" class="key empty">&Rcy;<sub style="font-size: 50%;">H</sub></td>
+                <td id="o" class="key empty">&Ocy;<sub style="font-size: 50%;">J</sub></td>
+                <td id="l" class="key empty">&Lcy;<sub style="font-size: 50%;">K</sub></td>
+                <td id="d" class="key empty">&Dcy;<sub style="font-size: 50%;">L</sub></td>
+                <td id="zh" class="key empty">&ZHcy;<sub style="font-size: 50%;">;</sub></td>
+                <td id="e" class="key empty">&Ecy;<sub style="font-size: 50%;">'</sub></td>
             </tr>
             <tr>
-                <td id="ya" class="empty key">&YAcy;<sub class="empty" style="font-size: 50%;">Z</sub></td>
-                <td id="ch" class="empty key">&CHcy;<sub class="empty" style="font-size: 50%;">X</sub></td>
-                <td id="s" class="empty key">&Scy;<sub class="empty" style="font-size: 50%;">C</sub></td>
-                <td id="m" class="empty key">&Mcy;<sub class="empty" style="font-size: 50%;">V</sub></td>
-                <td id="i" class="empty key">&Icy;<sub class="empty" style="font-size: 50%;">B</sub></td>
-                <td id="soft" class="empty key">&SOFTcy;<sub class="empty" style="font-size: 50%;">M</sub></td>
-                <td id="t" class="empty key">&Tcy;<sub class="empty" style="font-size: 50%;">N</sub></td>
-                <td id="b" class="empty key">&Bcy;<sub class="empty" style="font-size: 50%;">,</sub></td>
-                <td id="yu" class="empty key">&YUcy;<sub class="empty" style="font-size: 50%;">.</sub></td>
+                <td id="ya" class="key empty">&YAcy;<sub style="font-size: 50%;">Z</sub></td>
+                <td id="ch" class="key empty">&CHcy;<sub style="font-size: 50%;">X</sub></td>
+                <td id="s" class="key empty">&Scy;<sub style="font-size: 50%;">C</sub></td>
+                <td id="m" class="key empty">&Mcy;<sub style="font-size: 50%;">V</sub></td>
+                <td id="i" class="key empty">&Icy;<sub style="font-size: 50%;">B</sub></td>
+                <td id="soft" class="key empty">&SOFTcy;<sub style="font-size: 50%;">M</sub></td>
+                <td id="t" class="key empty">&Tcy;<sub style="font-size: 50%;">N</sub></td>
+                <td id="b" class="key empty">&Bcy;<sub style="font-size: 50%;">,</sub></td>
+                <td id="yu" class="key empty">&YUcy;<sub style="font-size: 50%;">.</sub></td>
             </tr>
         </table>
 

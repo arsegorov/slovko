@@ -120,13 +120,13 @@
                     let secretLetterPositions = secretWordPositions[letter],
                         count = 0;
 
-                    for (i of guessLetterPositions) {
+                    for (const i of guessLetterPositions) {
                         if (secretLetterPositions.includes(i)) {
                             result[i] = 2;
                             count++;
                         }
                     }
-                    for (i of guessLetterPositions) {
+                    for (const i of guessLetterPositions) {
                         if (!secretLetterPositions.includes(i)
                             && count < secretLetterPositions.length) {
                             result[i] = 1;
@@ -164,7 +164,7 @@
                     screenKey = $(`#${screenKeyID}`);
 
                 tableauSquare.removeClass(C_EMPTY);
-                screenKey.removeClass(function (i, class_name) {
+                screenKey.removeClass(function (_, class_name) {
                     // Drop the second class (e.g, "key empty" => "key")
                     return class_name.split(" ")[1];
                 });
@@ -299,7 +299,7 @@
                 "sh", "shch", "hard", "y", "soft", "e", "yu", "ya"
             ];
 
-            for (s of alphabet) {
+            for (const s of alphabet) {
                 let htmlEntity = `&${s.toUpperCase()}cy;`,      // constructing the HTML entity, "&<code>;"
                                                                 //  e.g, for the Cyrillic YU, the entity is "$YUcy;"
                     text = $("<p />").html(htmlEntity).text();  // evaluating the actual text using

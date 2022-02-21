@@ -8,6 +8,8 @@
     <script src="./jquery-3.6.0.min.js"></script>
     <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
 
+    <script src="./words.js"></script>
+
     <script>
         /*
          * Global variables and constants
@@ -229,8 +231,7 @@
          *  whether the string is a valid word
          */
         function validate(word) {
-            // todo: check agains a list of acceptable words
-            return word.includes("М");
+            return guessWords.includes(word.toLowerCase());
         }
 
         /**
@@ -315,8 +316,8 @@
             $("#delete").on("click", eraseLetter);
             $("#check").on("click", checkGuess);
 
-            // todo: randomly select from a list
-            secretLetters = "ТОТЕМ".split("");
+            let secretWord = secretWords[Math.floor(Math.random() * secretWords.length)];
+            secretLetters = secretWord.toUpperCase().split("");
             secretWordPositions = letterPositions(secretLetters);
         });
     </script>

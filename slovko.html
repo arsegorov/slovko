@@ -195,6 +195,23 @@
         }
 
         /**
+         * @param element{JQuery}
+         *  HTML element to shake
+         */
+        function shake(element) {
+            element.css("position", "relative");
+            for (let i = 0; i < 4; i++) {
+                element.animate({
+                    // 10 for even i, -10 for odd
+                    left: 10 * (1 - 2 * (i % 2))
+                }, 75);
+            }
+            element.animate({
+                left: 0
+            }, 75);
+        }
+
+        /**
          * Validates the guess and provides feedback.
          */
         function checkGuess() {
@@ -206,8 +223,8 @@
                     highlight(guessLetters);
 
                     if (guessWord === secretLetters.join("")) {
+                        console.debug("Победа!");
                         // todo: replace with stats screen
-                        alert("Победа!");
                         return;
                     }
 
@@ -215,8 +232,9 @@
                     inputPosition = 0;
                 }
                 else {
-                    // Todo: replace w/ visual feedback
-                    alert(`${guessWord} - некорректное слово!`);
+                    console.debug(`${guessWord} - некорректное слово!`);
+                    let row = $(`#attempt${guessAttempt + 1}`);
+                    shake(row);
                 }
             }
         }
@@ -302,9 +320,9 @@
 
             for (const s of alphabet) {
                 let htmlEntity = `&${s.toUpperCase()}cy;`,      // constructing the HTML entity, "&<code>;"
-                                                                //  e.g, for the Cyrillic YU, the entity is "$YUcy;"
+                    //  e.g, for the Cyrillic YU, the entity is "$YUcy;"
                     text = $("<p />").html(htmlEntity).text();  // evaluating the actual text using
-                                                                //  the browser's internal mechanisms
+                //  the browser's internal mechanisms
 
                 let screenKey = $(`#${s}`);
                 screenKey.attr("ruLetter", text);
@@ -327,42 +345,42 @@
     <div id="game">
         <div id="title">&Scy;&Lcy;&Ocy;&Vcy;&Kcy;&Ocy;</div>
         <table id="field">
-            <tr>
+            <tr id="attempt1">
                 <td id="letter11" class="letter empty" />
                 <td id="letter12" class="letter empty" />
                 <td id="letter13" class="letter empty" />
                 <td id="letter14" class="letter empty" />
                 <td id="letter15" class="letter empty" />
             </tr>
-            <tr>
+            <tr id="attempt2">
                 <td id="letter21" class="letter empty" />
                 <td id="letter22" class="letter empty" />
                 <td id="letter23" class="letter empty" />
                 <td id="letter24" class="letter empty" />
                 <td id="letter25" class="letter empty" />
             </tr>
-            <tr>
+            <tr id="attempt3">
                 <td id="letter31" class="letter empty" />
                 <td id="letter32" class="letter empty" />
                 <td id="letter33" class="letter empty" />
                 <td id="letter34" class="letter empty" />
                 <td id="letter35" class="letter empty" />
             </tr>
-            <tr>
+            <tr id="attempt4">
                 <td id="letter41" class="letter empty" />
                 <td id="letter42" class="letter empty" />
                 <td id="letter43" class="letter empty" />
                 <td id="letter44" class="letter empty" />
                 <td id="letter45" class="letter empty" />
             </tr>
-            <tr>
+            <tr id="attempt5">
                 <td id="letter51" class="letter empty" />
                 <td id="letter52" class="letter empty" />
                 <td id="letter53" class="letter empty" />
                 <td id="letter54" class="letter empty" />
                 <td id="letter55" class="letter empty" />
             </tr>
-            <tr>
+            <tr id="attempt6">
                 <td id="letter61" class="letter empty" />
                 <td id="letter62" class="letter empty" />
                 <td id="letter63" class="letter empty" />

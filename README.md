@@ -11,7 +11,7 @@ On each attempt, the player types in their guess into the grid, and then clicks 
 
 + If the letter is present in the correct answer and is in the correct position, it's highlitghted green.
 + If the letter is present in the correct answer, but is not in the correct position, it's highlighted yellow.
-+ If the letter is missing in the correct answer, it also remains unhighlighted.
++ If the letter is missing in the correct answer, it remains unhighlighted.
 
 **Note:** Each letter in the guess word is highlighted at most as many times as it occurs in the correct answer.
 The extra occurences of each letter in the guess word remain unhighlighted.
@@ -48,7 +48,7 @@ The prior attempts and feedback remain visible to the player. For player's conve
 + Если буква не встречается в загаданном слове, то она остаётся неподсвеченной.
 
 **Замечание:** Каждая буква в попытке подсвечивается не больше раз, чем она встречается в загаданном слове.
-Лишние повторы буквы остаются не подсвечиваются.
+Лишние повторы буквы в попытке не подсвечиваются.
 
 Предыдущие попытки остаются видны игроку вместе с подсветкой. Для удобства игрока, встречающиеся и невстречающиеся в загаданном слове буквы так же показаны на экранной клавиатуре.
 

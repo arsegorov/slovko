@@ -61,15 +61,15 @@ td {
 }
 
 /* Tile states */
-.empty {
+.empty, .empty * {
     background-color: #FDEDD2;
 }
-.position {
+.position, .position * {
     background-color: #B3CA14;
 }
-.word {
+.word, .word * {
     background-color: #F8CA00;
 }
-.miss {
+.miss, .miss * {
     background-color: darkgray;
 }

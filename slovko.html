@@ -49,34 +49,28 @@
          */
         function highlight(guessLetters, i) {
             let square = $(`#letter${attempt + 1}${i + 1}`),
-                screenKey = $(`#${square.attr("key")}`),
-                scrKeyDescendats = screenKey.find("*");
+                screenKey = $(`#${square.attr("key")}`);
 
             square.removeClass("empty");
             screenKey.removeClass("empty");
-            scrKeyDescendats.removeClass("empty");
 
             if (secretWord[i] == guessLetters[i]) {
                 square.addClass("position");
 
                 if (screenKey.hasClass("word")) {
                     screenKey.removeClass("word");
-                    scrKeyDescendats.removeClass("word");
                 }
                 screenKey.addClass("position");
-                scrKeyDescendats.addClass("position");
             } else if (secretWord.indexOf(guessLetters[i]) >= 0) {
                 square.addClass("word");
 
                 if (!screenKey.hasClass("position")) {
                     screenKey.addClass("word");
-                    scrKeyDescendats.addClass("word");
                 }
             } else {
                 square.addClass("miss");
 
                 screenKey.addClass("miss");
-                scrKeyDescendats.addClass("miss");
             }
         }
 

@@ -9,8 +9,10 @@ The game selects s random 5-letter word, but doesn't show it to the player. The 
 On each attempt, the player types in their guess into the grid, and then clicks `Enter`. After the attempt, the game provides feedback on each letter in the attempt:
 
 + If the letter is present in the correct answer and is in the correct position, it's highlitghted green.
-+ If the letter is present in the correct answer, but is not in the correct position, it's highlighted yellow.
-+ All other letters remain unhighlighted.
++ If the letter is present in the correct answer, but is not in the correct position, it's highlighted yellow.  
+  <span style="colr: red;">Note:</span> This also takes into accout the number of occurences of the letter in the correct answer.
+  The extra occurences of the letter in the guess word remain unhighlighted.
++ If the letter is missing in the correct answer, it also remains unhighlighted.
 
 The prior attempts and feedback remain visible to the player.
 
@@ -21,4 +23,4 @@ The prior attempts and feedback remain visible to the player.
 For example, if the game selects the word `ёршик`,
  which would be displayed by the game as `ЕРШИК`,
  and if the player guesses `ПЕРЕЦ`,
- the game will highlight the both `Е`s and the `Р` yellow.
+ the game will highlight the first `Е` and the `Р` yellow.

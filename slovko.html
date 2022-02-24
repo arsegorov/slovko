@@ -19,17 +19,17 @@
             inputPosition = 0,
             secretLetters = [],
             secretWordPositions = {},
-            bestKeyFlags = {};
+            bestGuessFlags = {};
 
         const
             N_LETTERS = 5,
-            N_ATTEMPTS = 6;
-
-        const
-            C_EMPTY = "empty",
-            C_POSITION = "position",
-            C_WORD = "word",
-            C_MISS = "miss";
+            N_ATTEMPTS = 6,
+            TILE_CLASSES = {
+                "-1": "empty",
+                "0": "miss",
+                "1": "word",
+                "2": "position"
+            };
 
 
         /**
@@ -154,10 +154,10 @@
             let flags = guessFlags(guessLetters);
 
             for (const [i, letter] of guessLetters.entries()) {
-                bestKeyFlags[letter] = bestKeyFlags[letter]
+                bestGuessFlags[letter] = bestGuessFlags[letter]
                     // If bestKeyFlags[letter] has already been set,
                     // update to the better of old value and flags[i]
-                    ? Math.max(bestKeyFlags[letter], flags[i])
+                    ? Math.max(bestGuessFlags[letter], flags[i])
                     // Otherwise, set it to flags[i]
                     : flags[i];
             }
@@ -167,32 +167,14 @@
                     screenKeyID = tableauSquare.attr("key"),
                     screenKey = $(`#${screenKeyID}`);
 
-                tableauSquare.removeClass(C_EMPTY);
+                tableauSquare.removeClass(TILE_CLASSES[-1]);
                 screenKey.removeClass(function (_, class_name) {
                     // Drop the second class (e.g, "key empty" => "key")
                     return class_name.split(" ")[1];
                 });
 
-                switch (flags[i]) {
-                    case 2:
-                        tableauSquare.addClass(C_POSITION);
-                        break;
-                    case 1:
-                        tableauSquare.addClass(C_WORD);
-                        break;
-                    default:
-                        tableauSquare.addClass(C_MISS);
-                }
-                switch (bestKeyFlags[letter]) {
-                    case 2:
-                        screenKey.addClass(C_POSITION);
-                        break;
-                    case 1:
-                        screenKey.addClass(C_WORD);
-                        break;
-                    default:
-                        screenKey.addClass(C_MISS);
-                }
+                tableauSquare.addClass(TILE_CLASSES[flags[i]]);
+                screenKey.addClass(TILE_CLASSES[bestGuessFlags[letter]]);
             }
         }
 

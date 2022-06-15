@@ -28,7 +28,7 @@
             guessAttempt = 0,
             inputPosition = 0,
             secretLetters = [],
-            secretWordPositions = {},
+            secretPositions = {},
             guessFlags = new Array(N_LETTERS),
             bestGuessFlags = {};
 
@@ -58,10 +58,10 @@
          */
         function eraseLetter() {
             if (inputPosition > 0) {
-                let square = $(`#letter${guessAttempt + 1}${inputPosition}`);
+                let tableauSquare = $(`#letter${guessAttempt + 1}${inputPosition}`);
 
-                square.text("");
-                square.attr("key", "");
+                tableauSquare.text("");
+                tableauSquare.attr("key", "");
                 tableauContents[guessAttempt].pop();
                 inputPosition--;
             }
@@ -116,12 +116,12 @@
          *  array of flags for the letters of the guess word
          */
         function setGuessFlags(guessLetters) {
-            let guessWordPositions = letterPositions(guessLetters);
+            let guessPositions = letterPositions(guessLetters);
             guessFlags.fill(0);
 
-            for (const [letter, guessLetterPositions] of Object.entries(guessWordPositions)) {
-                if (letter in secretWordPositions) {
-                    let secretLetterPositions = secretWordPositions[letter],
+            for (const [letter, guessLetterPositions] of Object.entries(guessPositions)) {
+                if (letter in secretPositions) {
+                    let secretLetterPositions = secretPositions[letter],
                         count = 0;
 
                     for (const i of guessLetterPositions) {
@@ -340,7 +340,7 @@
             let secretWord = secretWords[Math.floor(Math.random() * secretWords.length)];
 
             secretLetters = secretWord.toUpperCase().split("");
-            secretWordPositions = letterPositions(secretLetters);
+            secretPositions = letterPositions(secretLetters);
         });
     </script>
 </head>

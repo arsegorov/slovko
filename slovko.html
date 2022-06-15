@@ -12,24 +12,25 @@
 
     <script>
         /*
-         * Global variables and constants
+         * Global constants and variables
          */
+        const
+            N_LETTERS = 5,
+            N_ATTEMPTS = 6,
+            TILE_CLASSES = {
+                "-1": "empty",
+                "0": "miss",
+                "1": "word",
+                "2": "position"
+            };
+
         var tableauContents = [[], [], [], [], [], []],
             guessAttempt = 0,
             inputPosition = 0,
             secretLetters = [],
             secretWordPositions = {},
-            bestKeyFlags = {};
-
-        const
-            N_LETTERS = 5,
-            N_ATTEMPTS = 6;
-
-        const
-            C_EMPTY = "empty",
-            C_POSITION = "position",
-            C_WORD = "word",
-            C_MISS = "miss";
+            guessFlags = new Array(N_LETTERS),
+            bestGuessFlags = {};
 
 
         /**
@@ -93,7 +94,7 @@
         }
 
         /**
-         * Creates a list of flags indicating how the letters of the guess word
+         * Sets the list of flags indicating how the letters of the guess word
          *  should be highlighted.
          * 
          * 0 - the letter is missing in the secret word
@@ -114,9 +115,9 @@
          * @returns {number[]}
          *  array of flags for the letters of the guess word
          */
-        function guessFlags(guessLetters) {
-            let result = [0, 0, 0, 0, 0],
-                guessWordPositions = letterPositions(guessLetters);
+        function setGuessFlags(guessLetters) {
+            let guessWordPositions = letterPositions(guessLetters);
+            guessFlags.fill(0);
 
             for (const [letter, guessLetterPositions] of Object.entries(guessWordPositions)) {
                 if (letter in secretWordPositions) {
@@ -125,74 +126,60 @@
 
                     for (const i of guessLetterPositions) {
                         if (secretLetterPositions.includes(i)) {
-                            result[i] = 2;
+                            guessFlags[i] = 2;
                             count++;
                         }
                     }
                     for (const i of guessLetterPositions) {
                         if (!secretLetterPositions.includes(i)
                             && count < secretLetterPositions.length) {
-                            result[i] = 1;
+                            guessFlags[i] = 1;
                             count++;
                         }
                     }
                 }
             }
 
-            console.debug(`Guess flags for ${guessLetters}: ${result}`);
-            return result;
+            console.debug(`Guess flags for ${guessLetters}: ${guessFlags}`);
         }
 
         /**
-         * Highlights the playing field squares and on-screen keys
-         *  to indicate the guessed letters.
-         * 
+         * Updates the best guess flags for the on-screen keys.
+         *
          * @param guessLetters{string[]}
          *  an array of single-letter strings
          */
-        function highlight(guessLetters) {
-            let flags = guessFlags(guessLetters);
-
+        function updateBestGuessFlags(guessLetters) {
             for (const [i, letter] of guessLetters.entries()) {
-                bestKeyFlags[letter] = bestKeyFlags[letter]
+                bestGuessFlags[letter] = bestGuessFlags[letter]
                     // If bestKeyFlags[letter] has already been set,
                     // update to the better of old value and flags[i]
-                    ? Math.max(bestKeyFlags[letter], flags[i])
+                    ? Math.max(bestGuessFlags[letter], guessFlags[i])
                     // Otherwise, set it to flags[i]
-                    : flags[i];
+                    : guessFlags[i];
             }
+        }
 
+        /**
+         * Updates the classes of answer tiles and on-screen keys.
+         *
+         * @param guessLetters{string[]}
+         *  an array of single-letter strings
+         */
+        function updateClasses(guessLetters) {
             for (const [i, letter] of guessLetters.entries()) {
                 let tableauSquare = $(`#letter${guessAttempt + 1}${i + 1}`),
                     screenKeyID = tableauSquare.attr("key"),
                     screenKey = $(`#${screenKeyID}`);
 
-                tableauSquare.removeClass(C_EMPTY);
+                tableauSquare.removeClass(TILE_CLASSES[-1]);
                 screenKey.removeClass(function (_, class_name) {
                     // Drop the second class (e.g, "key empty" => "key")
                     return class_name.split(" ")[1];
                 });
 
-                switch (flags[i]) {
-                    case 2:
-                        tableauSquare.addClass(C_POSITION);
-                        break;
-                    case 1:
-                        tableauSquare.addClass(C_WORD);
-                        break;
-                    default:
-                        tableauSquare.addClass(C_MISS);
-                }
-                switch (bestKeyFlags[letter]) {
-                    case 2:
-                        screenKey.addClass(C_POSITION);
-                        break;
-                    case 1:
-                        screenKey.addClass(C_WORD);
-                        break;
-                    default:
-                        screenKey.addClass(C_MISS);
-                }
+                tableauSquare.addClass(TILE_CLASSES[guessFlags[i]]);
+                screenKey.addClass(TILE_CLASSES[bestGuessFlags[letter]]);
             }
         }
 
@@ -211,6 +198,18 @@
             element.animate({
                 left: 0
             }, 75);
+        }
+
+        /**
+         * Highlights the playing field squares and on-screen keys
+         *  to indicate the guessed letters.
+         * 
+         * @param guessLetters{string[]}
+         */
+        function highlight(guessLetters) {
+            setGuessFlags(guessLetters);
+            updateBestGuessFlags(guessLetters);
+            updateClasses(guessLetters);
         }
 
         /**

@@ -8,6 +8,8 @@
     <script src="./jquery-3.6.0.min.js"></script>
     <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
 
+    <script src="./words.js"></script>
+
     <script>
         /*
          * Global variables and constants
@@ -33,7 +35,8 @@
         /**
          * Processing on-screen keyboard clicks.
          * 
-         * @param screenKey{JQuery} the clicked on-screen key
+         * @param screenKey{JQuery}
+         *  the clicked on-screen key
          */
         function typeLetter(screenKey) {
             if (inputPosition < N_LETTERS) {
@@ -145,6 +148,7 @@
          *  to indicate the guessed letters.
          * 
          * @param guessLetters{string[]}
+         *  an array of single-letter strings
          */
         function highlight(guessLetters) {
             let flags = guessFlags(guessLetters);
@@ -193,6 +197,23 @@
         }
 
         /**
+         * @param element{JQuery}
+         *  HTML element to shake
+         */
+        function shake(element) {
+            element.css("position", "relative");
+            for (let i = 0; i < 4; i++) {
+                element.animate({
+                    // 10 for even i, -10 for odd
+                    left: 10 * (1 - 2 * (i % 2))
+                }, 75);
+            }
+            element.animate({
+                left: 0
+            }, 75);
+        }
+
+        /**
          * Validates the guess and provides feedback.
          */
         function checkGuess() {
@@ -204,8 +225,8 @@
                     highlight(guessLetters);
 
                     if (guessWord === secretLetters.join("")) {
+                        console.debug("Победа!");
                         // todo: replace with stats screen
-                        alert("Победа!");
                         return;
                     }
 
@@ -213,8 +234,9 @@
                     inputPosition = 0;
                 }
                 else {
-                    // Todo: replace w/ visual feedback
-                    alert(`${guessWord} - некорректное слово!`);
+                    console.debug(`${guessWord} - некорректное слово!`);
+                    let row = $(`#attempt${guessAttempt + 1}`);
+                    shake(row);
                 }
             }
         }
@@ -229,8 +251,7 @@
          *  whether the string is a valid word
          */
         function validate(word) {
-            // todo: check agains a list of acceptable words
-            return word.includes("М");
+            return guessWords.includes(word.toLowerCase());
         }
 
         /**
@@ -300,10 +321,12 @@
             ];
 
             for (const s of alphabet) {
-                let htmlEntity = `&${s.toUpperCase()}cy;`,      // constructing the HTML entity, "&<code>;"
-                                                                //  e.g, for the Cyrillic YU, the entity is "$YUcy;"
-                    text = $("<p />").html(htmlEntity).text();  // evaluating the actual text using
-                                                                //  the browser's internal mechanisms
+                // constructing the HTML entity, "&<code>;"
+                //  e.g, for the Cyrillic YU, the entity is "$YUcy;"
+                let htmlEntity = `&${s.toUpperCase()}cy;`;
+                // evaluating the actual text using  
+                //  the browser's internal mechanisms
+                let text = $("<p />").html(htmlEntity).text();
 
                 let screenKey = $(`#${s}`);
                 screenKey.attr("ruLetter", text);
@@ -315,8 +338,9 @@
             $("#delete").on("click", eraseLetter);
             $("#check").on("click", checkGuess);
 
-            // todo: randomly select from a list
-            secretLetters = "ТОТЕМ".split("");
+            let secretWord = secretWords[Math.floor(Math.random() * secretWords.length)];
+
+            secretLetters = secretWord.toUpperCase().split("");
             secretWordPositions = letterPositions(secretLetters);
         });
     </script>
@@ -326,42 +350,42 @@
     <div id="game">
         <div id="title">&Scy;&Lcy;&Ocy;&Vcy;&Kcy;&Ocy;</div>
         <table id="field">
-            <tr>
+            <tr id="attempt1">
                 <td id="letter11" class="letter empty" />
                 <td id="letter12" class="letter empty" />
                 <td id="letter13" class="letter empty" />
                 <td id="letter14" class="letter empty" />
                 <td id="letter15" class="letter empty" />
             </tr>
-            <tr>
+            <tr id="attempt2">
                 <td id="letter21" class="letter empty" />
                 <td id="letter22" class="letter empty" />
                 <td id="letter23" class="letter empty" />
                 <td id="letter24" class="letter empty" />
                 <td id="letter25" class="letter empty" />
             </tr>
-            <tr>
+            <tr id="attempt3">
                 <td id="letter31" class="letter empty" />
                 <td id="letter32" class="letter empty" />
                 <td id="letter33" class="letter empty" />
                 <td id="letter34" class="letter empty" />
                 <td id="letter35" class="letter empty" />
             </tr>
-            <tr>
+            <tr id="attempt4">
                 <td id="letter41" class="letter empty" />
                 <td id="letter42" class="letter empty" />
                 <td id="letter43" class="letter empty" />
                 <td id="letter44" class="letter empty" />
                 <td id="letter45" class="letter empty" />
             </tr>
-            <tr>
+            <tr id="attempt5">
                 <td id="letter51" class="letter empty" />
                 <td id="letter52" class="letter empty" />
                 <td id="letter53" class="letter empty" />
                 <td id="letter54" class="letter empty" />
                 <td id="letter55" class="letter empty" />
             </tr>
-            <tr>
+            <tr id="attempt6">
                 <td id="letter61" class="letter empty" />
                 <td id="letter62" class="letter empty" />
                 <td id="letter63" class="letter empty" />

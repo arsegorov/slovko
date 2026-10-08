@@ -2,6 +2,7 @@
 .*
 # - excluding
 !.gitignore
+!.devcontainer/
 
 # jQuery sources
 jquery*
